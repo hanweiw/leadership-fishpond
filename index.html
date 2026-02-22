@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鱼塘公约 | 领越领导力模拟沙盘</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #0284c7; --danger: #dc2626; --success: #16a34a; --dark: #0f172a; --bg: #f8fafc; --gold: #eab308; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #334155; }
+        .hidden { display: none !important; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        button { cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: 0.2s; padding: 10px 20px; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #cbd5e1 !important; cursor: not-allowed; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .tab-group { background: #e2e8f0; padding: 4px; border-radius: 8px; display: flex; gap: 5px; }
+        .tab-group button { background: none; color: #64748b; padding: 8px 15px; flex: 1; }
+        .tab-group button.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        #admin-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        .stat-card { background: var(--dark); color: white; padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-card h4 { margin: 0; font-size: 12px; color: #94a3b8; }
+        .stat-card p { margin: 5px 0 0; font-size: 24px; font-weight: bold; }
+
+        .chart-box { height: 260px; position: relative; }
+        #review-panel { border: 2px solid var(--gold); background: #fefce8; }
+        .behavior-box { padding: 12px; margin: 8px 0; background: white; border-left: 4px solid var(--gold); border-radius: 6px; opacity: 0; transition: 1s; font-weight: bold; font-size: 15px; }
+        .show { opacity: 1 !important; }
+
+        /* 学生端特有 */
+        .company-header { display: flex; justify-content: space-between; align-items: center; }
+        .score-box { background: #f1f5f9; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px; border: 2px dashed #cbd5e1; }
+        .score-box.bankrupt { background: #fef2f2; border-color: #fca5a5; color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <div class="tab-group">
+            <button id="btn-to-stu" class="active" onclick="switchRole('student')">企业决策端</button>
+            <button id="btn-to-adm" onclick="switchRole('admin')">上帝视角大屏</button>
+        </div>
+        <button onclick="logout()" style="background:#cbd5e1; font-size: 13px;">退出连接</button>
+    </div>
+
+    <div id="screen-login" class="card" style="max-width: 400px; margin: 50px auto; text-align: center; border-top: 5px solid var(--primary);">
+        <h2 style="color:var(--primary); margin-top:0;">🐟 鱼塘公约系统</h2>
+        <div id="login-stu-area">
+            <input type="text" id="login-user" placeholder="企业系统账号 (如: 200101)">
+            <input type="password" id="login-pass" placeholder="初始授权码">
+            <button onclick="studentLogin()" style="background:var(--primary); color:white; width:100%; margin-top:10px;">接入生态网络</button>
+        </div>
+        <div id="login-adm-area" class="hidden">
+            <select id="login-room">
+                <option value="2001">2001 考场</option><option value="2002">2002 考场</option>
+                <option value="2003">2003 考场</option><option value="2004">2004 考场</option>
+            </select>
+            <input type="password" id="login-adm-pass" placeholder="指挥官密码 (房间号+419)">
+            <button onclick="adminLogin()" style="background:var(--dark); color:white; width:100%; margin-top:10px;">启动监控大屏</button>
+        </div>
+    </div>
+
+    <div id="screen-student" class="hidden" style="max-width: 500px; margin: 0 auto;">
+        <div class="card">
+            <div class="company-header">
+                <h3 id="s-team-name" style="margin:0; color:var(--dark);">载入中...</h3>
+                <button onclick="renameTeam()" style="background:#e2e8f0; color:#475569; padding:5px 10px; font-size:12px;">✏️ 改组名</button>
+            </div>
+            <div id="s-score-container" class="score-box">
+                <div style="font-size: 14px; color: #64748b;">累计公司收益 (吨)</div>
+                <div id="s-total-catch" style="font-size: 32px; font-weight:bold; color:var(--primary); margin-top:5px;">0</div>
+                <div id="s-bankrupt-msg" class="hidden" style="font-size:12px; font-weight:bold; margin-top:5px;">⚠️ 生态崩溃，资产强制清零！</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h4 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top:0;">第 <span id="s-turn" style="color:var(--primary); font-size:20px;">1</span> 轮 生产决策</h4>
+            <p style="font-size: 13px; color: #64748b;">受制于船队产能，单轮最大捕捞量为 <b>100</b> 吨。</p>
+            <input type="number" id="catch-input" placeholder="请输入计划捕捞量 (0-100)..." min="0" max="100">
+            <button id="btn-submit" onclick="submitDecision()" style="background:var(--success); color:white; width:100%; margin-top:10px; font-size: 16px;">锁定本轮产量</button>
+            <p id="submit-msg" style="text-align:center; color:var(--success); font-weight:bold; height:20px; margin-bottom:0;"></p>
+        </div>
+    </div>
+
+    <div id="screen-admin" class="hidden">
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 20px;">
+            <h3 style="margin:0;">🌍 全局生态监控中心 <span id="t-room-tag" style="color:var(--primary); font-size:16px;"></span></h3>
+            <div style="display:flex; gap:10px;">
+                <span style="background:#f1f5f9; padding:8px 15px; border-radius:6px; font-weight:bold; font-size:14px;">已连接企业: <span id="t-active-teams" style="color:var(--primary);">0</span></span>
+                <button onclick="initGameSession()" style="background:var(--gold); color:white;">🔄 1. 初始化/开启新场次</button>
+            </div>
+        </div>
+
+        <div id="admin-layout">
+            <div class="left-panel">
+                <div class="stat-grid">
+                    <div class="stat-card"><h4>当前轮数</h4><p id="t-turn">0</p></div>
+                    <div class="stat-card" style="background:var(--primary)"><h4>本轮期初鱼量</h4><p id="t-fish">0</p></div>
+                    <div class="stat-card" style="background:var(--success)"><h4>生态环境上限</h4><p id="t-max">0</p></div>
+                    <div class="stat-card" style="background:var(--danger)"><h4>已收到决策</h4><p id="t-submitted">0 / 0</p></div>
+                </div>
+                
+                <div class="card">
+                    <h4 style="margin:top:0; color:#475569;">📉 全局生态演变趋势</h4>
+                    <div class="chart-box"><canvas id="lineChart"></canvas></div>
+                </div>
+                
+                <div class="card" style="background:#fef2f2; border:1px solid #fca5a5;">
+                    <button id="btn-process" onclick="processRound()" style="background:var(--danger); color:white; width:100%; font-size: 18px; box-shadow: 0 4px 10px rgba(220,38,38,0.3);">⚠️ 2. 结算本轮并开启繁衍</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card">
+                    <h4 style="margin-top:0; color:#475569; text-align:center;">🏆 累计收益排行榜 (抓大亨)</h4>
+                    <div style="height:200px; position:relative;"><canvas id="barChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <h4 style="margin-top:0; color:#475569; text-align:center;">🍕 上一轮捕捞占比 (抓搭便车)</h4>
+                    <div style="height:200px; position:relative;"><canvas id="pieChart"></canvas></div>
+                </div>
+                
+                <div id="review-panel" class="card hidden">
+                    <h3 style="margin-top:0; color:var(--danger);">🚨 鱼塘枯竭！文明崩塌</h3>
+                    <p style="font-size:13px; color:#64748b; margin-top:0;">所有企业资产已清零。启动领越领导力复盘：</p>
+                    <div class="behavior-box" id="b1">以身作则 (Model the Way)</div>
+                    <div class="behavior-box" id="b2">共启愿景 (Inspire a Shared Vision)</div>
+                    <div class="behavior-box" id="b3">挑战现状 (Challenge the Process)</div>
+                    <div class="behavior-box" id="b4">使众人行 (Enable Others to Act)</div>
+                    <div class="behavior-box" id="b5">激励人心 (Encourage the Heart)</div>
+                    <button onclick="revealBehaviors()" style="background:var(--gold); color:white; width:100%; margin-top:10px;">逐项揭晓复盘点</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- 数据库配置 ---
+    const SB_URL = 'https://adjvfvfbjfrtenvbocfw.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkanZmdmZiamZydGVudmJvY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMzAzNjEsImV4cCI6MjA4MTcwNjM2MX0.Fzd2LU2ueKg0V47NSC9nQY_5hHaFY8SqJuV281iXKag';
+    const sb = supabase.createClient(SB_URL, SB_KEY);
+    
+    let myTeam = null, myRoomId = null, activeTeamCount = 0;
+    let lineChart, pieChart, barChart;
+
+    // --- 登录与视图切换 ---
+    function switchRole(role) {
+        document.getElementById('login-stu-area').classList.toggle('hidden', role !== 'student');
+        document.getElementById('login-adm-area').classList.toggle('hidden', role !== 'admin');
+        document.getElementById('btn-to-stu').classList.toggle('active', role === 'student');
+        document.getElementById('btn-to-adm').classList.toggle('active', role === 'admin');
+    }
+
+    async function studentLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        const { data } = await sb.from('fishpond_teams').select('*').eq('username', u).eq('password', p).single();
+        if (data) { 
+            myTeam = data; myRoomId = data.room_id; 
+            // 标记激活状态
+            await sb.from('fishpond_teams').update({ is_active: true }).eq('id', myTeam.id);
+            initStudentUI(); 
+        } else { alert("账号或授权码错误"); }
+    }
+
+    function adminLogin() {
+        const room = document.getElementById('login-room').value;
+        const pwd = document.getElementById('login-adm-pass').value;
+        if (pwd === room + "419") { myRoomId = room; initAdminUI(); } else { alert("指挥官密码错误"); }
+    }
+
+    // --- 学生端逻辑 ---
+    function initStudentUI() {
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-student').classList.remove('hidden');
+        renderStudentData(myTeam);
+        
+        // 监听房间状态变化 (轮数)
+        sb.channel('stu_room').on('postgres_changes', { event:'UPDATE', schema:'public', table:'fishpond_rooms', filter:`id=eq.${myRoomId}` }, payload => {
+            const r = payload.new;
+            document.getElementById('s-turn').innerText = r.turn;
+            document.getElementById('btn-submit').disabled = false;
+            document.getElementById('submit-msg').innerText = "";
+            document.getElementById('catch-input').value = "";
+            
+            if (r.is_collapsed) {
+                document.getElementById('s-score-container').classList.add('bankrupt');
+                document.getElementById('s-bankrupt-msg').classList.remove('hidden');
+            } else {
+                document.getElementById('s-score-container').classList.remove('bankrupt');
+                document.getElementById('s-bankrupt-msg').classList.add('hidden');
+            }
+        }).subscribe();
+
+        // 监听自身数据变化 (收益)
+        sb.channel('stu_team').on('postgres_changes', { event:'UPDATE', schema:'public', table:'fishpond_teams', filter:`id=eq.${myTeam.id}` }, payload => {
+            renderStudentData(payload.new);
+        }).subscribe();
+    }
+
+    function renderStudentData(t) {
+        myTeam = t;
+        document.getElementById('s-team-name').innerText = t.name;
+        document.getElementById('s-total-catch').innerText = t.total_catch;
+    }
+
+    async function renameTeam() {
+        const newName = prompt("请输入新的企业名称：", myTeam.name);
+        if (newName && newName.trim() !== "") {
+            await sb.from('fishpond_teams').update({ name: newName.trim() }).eq('id', myTeam.id);
+        }
+    }
+
+    async function submitDecision() {
+        const val = parseInt(document.getElementById('catch-input').value);
+        if (isNaN(val) || val < 0 || val > 100) return alert("❌ 警告：输入不合规！产能限制在 0 - 100 吨之间。");
+        
+        await sb.from('fishpond_teams').update({ last_catch: val }).eq('id', myTeam.id);
+        document.getElementById('btn-submit').disabled = true;
+        document.getElementById('submit-msg').innerText = "✅ 数据已锁定上传";
+    }
+
+    // --- 教师端逻辑 ---
+    async function initAdminUI() {
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-admin').classList.remove('hidden');
+        document.getElementById('t-room-tag').innerText = `[${myRoomId}]`;
+        
+        initCharts();
+        await fetchAdminData();
+
+        sb.channel('adm_room').on('postgres_changes', { event:'*', schema:'public', table:'fishpond_rooms', filter:`id=eq.${myRoomId}` }, () => fetchAdminData()).subscribe();
+        sb.channel('adm_team').on('postgres_changes', { event:'*', schema:'public', table:'fishpond_teams', filter:`room_id=eq.${myRoomId}` }, () => fetchAdminData()).subscribe();
+    }
+
+    function initCharts() {
+        const fontOpts = { size: 10 };
+        lineChart = new Chart(document.getElementById('lineChart'), { type: 'line', data: { labels: [], datasets: [{ label: '期初鱼量', data: [], borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.1)', fill: true, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        pieChart = new Chart(document.getElementById('pieChart'), { type: 'pie', data: { labels: [], datasets: [{ data: [], backgroundColor: ['#ef4444','#f97316','#f59e0b','#84cc16','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#d946ef'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: fontOpts } } } } });
+        barChart = new Chart(document.getElementById('barChart'), { type: 'bar', data: { labels: [], datasets: [{ label: '累计收益', data: [], backgroundColor: '#eab308' }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { font: fontOpts } }, y: { ticks: { font: { size: 11, weight: 'bold' } } } } } });
+    }
+
+    async function fetchAdminData() {
+        const { data: room } = await sb.from('fishpond_rooms').select('*').eq('id', myRoomId).single();
+        const { data: teams } = await sb.from('fishpond_teams').select('*').eq('room_id', myRoomId).eq('is_active', true);
+        const { data: logs } = await sb.from('fishpond_logs').select('*').eq('room_id', myRoomId).eq('exp_id', room.experiment_id).order('turn');
+        
+        activeTeamCount = teams.length;
+        document.getElementById('t-active-teams').innerText = activeTeamCount;
+        document.getElementById('t-turn').innerText = room.turn;
+        document.getElementById('t-fish').innerText = room.current_fish;
+        document.getElementById('t-max').innerText = room.max_capacity;
+        
+        const submittedCount = teams.filter(t => t.last_catch !== null).length;
+        document.getElementById('t-submitted').innerText = `${submittedCount} / ${activeTeamCount}`;
+
+        // 更新折线图
+        if (logs.length > 0) {
+            lineChart.data.labels = logs.map(l => "R" + l.turn);
+            lineChart.data.datasets[0].data = logs.map(l => l.initial_fish);
+            lineChart.update();
+        }
+
+        // 更新排行榜 (基于累计收益降序排序)
+        let sortedTeams = [...teams].sort((a, b) => b.total_catch - a.total_catch);
+        let barLabels = [], barData = [];
+        sortedTeams.forEach((t, i) => {
+            let rankTag = i === 0 ? "🥇大亨 " : (i === 1 ? "🥈 " : (i === 2 ? "🥉 " : ""));
+            barLabels.push(rankTag + t.name.substring(0,6));
+            barData.push(t.total_catch);
+        });
+        barChart.data.labels = barLabels;
+        barChart.data.datasets[0].data = barData;
+        barChart.update();
+    }
+
+    async function initGameSession() {
+        if (!confirm("⚠️ 确定开启新场次？系统将清空当前所有公司的累计收益，并基于当前已登录的企业数量重置资源上限！")) return;
+        
+        const { data: teams } = await sb.from('fishpond_teams').select('id').eq('room_id', myRoomId).eq('is_active', true);
+        let N = teams.length;
+        if (N === 0) return alert("❌ 错误：当前没有任何小组登录连接，无法计算生态上限！");
+
+        const { data: room } = await sb.from('fishpond_rooms').select('experiment_id').eq('id', myRoomId).single();
+        const nextExp = (room.experiment_id || 1) + 1;
+
+        // 重置环境，设定 N*300 与 N*400
+        await sb.from('fishpond_rooms').update({ experiment_id: nextExp, turn: 1, current_fish: N * 300, max_capacity: N * 400, is_collapsed: false }).eq('id', myRoomId);
+        // 清空所有小组累计和当轮缓存
+        await sb.from('fishpond_teams').update({ total_catch: 0, last_catch: null }).eq('room_id', myRoomId);
+        
+        // 清理图表旧数据
+        lineChart.data.labels = []; lineChart.data.datasets[0].data = []; lineChart.update();
+        pieChart.data.labels = []; pieChart.data.datasets[0].data = []; pieChart.update();
+        document.getElementById('review-panel').classList.add('hidden');
+        alert(`✅ 场次已重置！识别到 ${N} 个公司网络，生态上限设定为 ${N * 400} 吨。`);
+    }
+
+    async function processRound() {
+        if(activeTeamCount === 0) return alert("暂无连接的企业");
+        const btn = document.getElementById('btn-process');
+        btn.innerText = "⏳ 繁衍计算中..."; btn.disabled = true;
+
+        try {
+            const { data: teams } = await sb.from('fishpond_teams').select('*').eq('room_id', myRoomId).eq('is_active', true);
+            const { data: room } = await sb.from('fishpond_rooms').select('*').eq('id', myRoomId).single();
+            
+            if (room.is_collapsed) return alert("鱼塘已枯竭，请开启新场次。");
+
+            let totalCatch = 0, pieLabels = [], pieValues = [];
+            for (let t of teams) {
+                let val = t.last_catch || 0; // 如果没交，按0算
+                totalCatch += val; 
+                pieLabels.push(t.name); pieValues.push(val);
+                await sb.from('fishpond_teams').update({ total_catch: t.total_catch + val, last_catch: null }).eq('id', t.id);
+            }
+            
+            // 实时展示各家真实抽取的贪婪程度
+            pieChart.data.labels = pieLabels; pieChart.data.datasets[0].data = pieValues; pieChart.update();
+
+            // 写入日志供折线图绘制
+            await sb.from('fishpond_logs').insert({ room_id: myRoomId, exp_id: room.experiment_id, turn: room.turn, initial_fish: room.current_fish, total_catch_all: totalCatch });
+
+            // 判断环境崩盘
+            if (totalCatch >= room.current_fish) {
+                // 崩盘清零逻辑！
+                await sb.from('fishpond_rooms').update({ turn: room.turn + 1, current_fish: 0, is_collapsed: true }).eq('id', myRoomId);
+                await sb.from('fishpond_teams').update({ total_catch: 0 }).eq('room_id', myRoomId).eq('is_active', true);
+                document.getElementById('review-panel').classList.remove('hidden');
+            } else {
+                let nextFish = Math.min(room.max_capacity, Math.round((room.current_fish - totalCatch) * 1.2));
+                await sb.from('fishpond_rooms').update({ turn: room.turn + 1, current_fish: nextFish }).eq('id', myRoomId);
+            }
+        } catch(e) { console.error(e); }
+        finally { btn.innerText = "⚠️ 2. 结算本轮并开启繁衍"; btn.disabled = false; }
+    }
+
+    function revealBehaviors() {
+        ['b1','b2','b3','b4','b5'].forEach((id, i) => setTimeout(() => document.getElementById(id).classList.add('show'), i * 800));
+    }
+
+    function logout() { location.reload(); }
+</script>
+</body>
+</html>
