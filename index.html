@@ -8,60 +8,55 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #0ea5e9; --danger: #ef4444; --success: #10b981; --dark: #0f172a; --bg: #f8fafc; --gold: #f59e0b; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; color: #334155; overflow-x: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; color: #334155; overflow-x: hidden; }
         .hidden { display: none !important; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; position: relative; z-index: 10; }
         button { cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: 0.2s; padding: 10px 20px; font-size: 14px; }
         button:active { transform: scale(0.98); }
         button:disabled { background: #cbd5e1 !important; cursor: not-allowed; color: #64748b !important; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
 
-        /* === 海洋背景动画 (小鱼顺向游动修复) === */
+        /* 海洋背景动画 */
         .ocean-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, #0284c7, #38bdf8); z-index: 0; overflow: hidden; }
         .fish { position: absolute; font-size: 24px; opacity: 0.8; animation: swim linear infinite; }
         .fish::before { content: '🐠'; }
         .f2::before { content: '🐟'; font-size: 30px; } .f3::before { content: '🐡'; font-size: 20px; }
         @keyframes swim { from { transform: translateX(-100px) scaleX(-1); } to { transform: translateX(105vw) scaleX(-1); } }
 
-        /* === 顶部注销栏 === */
-        .nav-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px; background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(5px); }
-
-        /* === 登录页 === */
+        /* 登录页 */
         #screen-login { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .login-card { background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 420px; text-align: center; backdrop-filter: blur(10px); border-top: 6px solid var(--primary); }
         .login-title { color: var(--primary); margin: 0 0 10px 0; font-size: 28px; }
         .login-subtitle { color: #64748b; margin-bottom: 25px; font-weight: normal; font-size: 15px; }
-        
-        /* 登录入口切换器 */
         .login-tabs { display: flex; background: #e2e8f0; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
         .login-tabs button { flex: 1; background: transparent; color: #64748b; padding: 10px; font-size: 15px; }
         .login-tabs button.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        /* === 教师端布局 === */
-        #admin-layout { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
+        /* 浅色数据卡片 */
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: var(--dark); color: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .stat-card h4 { margin: 0; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-card p { margin: 5px 0 0; font-size: 26px; font-weight: 800; }
+        .stat-card { background: white; border: 1px solid #cbd5e1; color: var(--dark); padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-card h4 { margin: 0; font-size: 13px; color: #64748b; font-weight: 600; }
+        .stat-card p { margin: 8px 0 0; font-size: 28px; font-weight: 900; color: var(--primary); }
+        
+        /* 教师大屏布局 */
+        #admin-layout { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
         .chart-box { height: 280px; position: relative; }
-
-        /* === 教师端表格 === */
-        .table-container { overflow-x: auto; }
+        .table-container { overflow-x: auto; max-height: 300px; }
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         .admin-table th, .admin-table td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
-        .admin-table th { background-color: #f8fafc; color: #64748b; font-weight: 600; }
+        .admin-table th { background-color: #f8fafc; color: #64748b; font-weight: 600; position: sticky; top: 0; }
         .status-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .status-ok { background: #dcfce7; color: var(--success); }
         .status-pending { background: #fee2e2; color: var(--danger); }
 
-        /* === 复盘面板 === */
-        #review-panel { border: 3px solid var(--danger); background: #fff1f2; }
-        .behavior-box { padding: 12px; margin: 8px 0; background: white; border-left: 5px solid var(--gold); border-radius: 6px; opacity: 0; transition: 0.8s ease-out; font-weight: bold; font-size: 15px; transform: translateX(-20px); }
-        .show { opacity: 1 !important; transform: translateX(0) !important; }
+        /* 崩溃弹窗 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 40px; border-radius: 16px; text-align: center; max-width: 450px; border-top: 10px solid var(--danger); box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* === 学生端 === */
+        /* 学生端 */
         .score-box { background: #f0f9ff; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 2px solid #bae6fd; }
         .score-box.bankrupt { background: #fef2f2; border-color: #fca5a5; color: var(--danger); animation: shake 0.5s; }
         .info-row { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -79,10 +74,6 @@
     </div>
 
     <div class="container">
-        <div id="nav-container" class="nav-bar hidden">
-            <button onclick="logout()" style="background:#cbd5e1; font-size: 13px; color: #475569;">🚪 退出系统</button>
-        </div>
-
         <div id="screen-login">
             <div class="login-card">
                 <h2 class="login-title">🐟 鱼塘公约</h2>
@@ -95,7 +86,7 @@
 
                 <div id="login-stu-area">
                     <input type="text" id="login-user" placeholder="请输入小组账号">
-                    <input type="password" id="login-pass" placeholder="请输入初始授权码">
+                    <input type="password" id="login-pass" placeholder="请输入密码">
                     <button onclick="studentLogin()" style="background:var(--primary); color:white; width:100%; margin-top:15px; font-size: 16px; padding: 12px;">接入生态网络</button>
                 </div>
                 
@@ -111,8 +102,12 @@
         </div>
 
         <div id="screen-student" class="hidden" style="max-width: 600px; margin: 0 auto;">
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background: rgba(255,255,255,0.95);">
+                <h3 style="margin:0; color:var(--dark);">🏢 企业决策控制台</h3>
+                <button onclick="logout()" style="background:#f1f5f9; color:var(--danger); font-size:12px; padding: 6px 12px;">退出系统</button>
+            </div>
+
             <div class="card">
-                <h3 style="margin-top:0; color:var(--dark);">🏢 企业信息登记</h3>
                 <div class="info-row">
                     <input type="text" id="s-team-name-input" placeholder="公司名称">
                     <button onclick="updateTeamInfo('name')" style="background:#e2e8f0; color:#475569;">更新名称</button>
@@ -122,19 +117,15 @@
                     <button onclick="updateTeamInfo('members')" style="background:#e2e8f0; color:#475569;">登记组员</button>
                 </div>
                 <div id="s-score-container" class="score-box">
-                    <div style="font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">累计公司收益 (吨)</div>
-                    <div id="s-total-catch" style="font-size: 48px; font-weight:900; color:var(--primary); margin: 10px 0;">0</div>
-                    <div id="s-bankrupt-msg" class="hidden" style="font-size:16px; font-weight:bold; color:var(--danger);">⚠️ 生态崩溃，资产强制清零！</div>
+                    <div style="font-size: 14px; color: #64748b; font-weight: bold;">累计公司收益 (吨)</div>
+                    <div id="s-total-catch" style="font-size: 48px; font-weight:900; color:var(--primary); margin: 5px 0;">0</div>
+                    <div id="s-bankrupt-msg" class="hidden" style="font-size:16px; font-weight:bold; color:var(--danger);">⚠️ 资产已被系统强制清零！</div>
                 </div>
             </div>
             
             <div class="card" style="border-top: 4px solid var(--primary);">
-                <h3 style="margin-top:0; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
-                    第 <span id="s-turn" style="color:var(--primary); font-size:28px;">1</span> 轮 生产决策
-                </h3>
-                <p style="font-size: 14px; color: #64748b; background: #f1f5f9; padding: 10px; border-radius: 8px;">
-                    ℹ️ 受制于船队产能，单轮最大捕捞量限制为 <b>100</b> 吨。
-                </p>
+                <h3 style="margin-top:0; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">第 <span id="s-turn" style="color:var(--primary); font-size:28px;">1</span> 轮 生产决策</h3>
+                <p style="font-size: 13px; color: #64748b; background: #f1f5f9; padding: 10px; border-radius: 6px;">ℹ️ 船队产能上限为 <b>100</b> 吨。</p>
                 <input type="number" id="catch-input" placeholder="请输入本轮计划捕捞量 (0-100)..." min="0" max="100" style="font-size: 24px; font-weight: bold; text-align: center; padding: 15px;">
                 <button id="btn-submit" onclick="submitDecision()" style="background:var(--success); color:white; width:100%; margin-top:15px; font-size: 18px; padding: 15px;">锁定本轮产量</button>
                 <p id="submit-msg" style="text-align:center; color:var(--success); font-weight:bold; margin-bottom:0; height: 20px;"></p>
@@ -142,16 +133,17 @@
         </div>
 
         <div id="screen-admin" class="hidden">
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 25px; background: rgba(255,255,255,0.9);">
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 25px; background: rgba(255,255,255,0.95);">
                 <div>
-                    <h2 style="margin:0; color:var(--dark);">🌍 全局生态监控中心</h2>
+                    <h2 style="margin:0; color:var(--dark);">🌍 教师视角大屏</h2>
                     <span style="color:#64748b; font-size: 14px;">当前房间号: <span id="t-room-tag" style="font-weight:bold; color:var(--primary);"></span></span>
                 </div>
-                <div style="display:flex; gap:15px; align-items: center;">
-                    <span style="background:#e0f2fe; padding:10px 20px; border-radius:30px; font-weight:bold; color:var(--primary); border: 2px solid #bae6fd;">
-                        已连接企业: <span id="t-active-teams" style="font-size:20px;">0</span> 家
+                <div style="display:flex; gap:12px; align-items: center;">
+                    <span style="background:#e0f2fe; padding:8px 15px; border-radius:8px; font-weight:bold; color:var(--primary);">
+                        已连接: <span id="t-active-teams" style="font-size:18px;">0</span> 家
                     </span>
-                    <button onclick="initGameSession()" style="background:var(--gold); color:white; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);">🔄 1. 初始化/开启新场次</button>
+                    <button onclick="initGameSession()" style="background:var(--gold); color:white;">🔄 初始化/新场次</button>
+                    <button onclick="logout()" style="background:#f1f5f9; color:var(--danger);">退出系统</button>
                 </div>
             </div>
 
@@ -159,72 +151,62 @@
                 <div class="left-panel">
                     <div class="stat-grid">
                         <div class="stat-card"><h4>当前轮数</h4><p id="t-turn">-</p></div>
-                        <div class="stat-card" style="background:var(--primary)"><h4>本轮期初鱼量</h4><p id="t-fish">-</p></div>
-                        <div class="stat-card" style="background:var(--success)"><h4>生态环境上限</h4><p id="t-max">-</p></div>
-                        <div class="stat-card" style="background:var(--dark)"><h4>决策进度</h4><p id="t-submitted">- / -</p></div>
+                        <div class="stat-card"><h4>本轮期初鱼量</h4><p id="t-fish" style="color:var(--success)">-</p></div>
+                        <div class="stat-card"><h4>生态环境上限</h4><p id="t-max">-</p></div>
+                        <div class="stat-card"><h4>决策进度</h4><p id="t-submitted" style="color:var(--danger)">- / -</p></div>
                     </div>
                     
                     <div class="card">
-                        <h4 style="margin-top:0; color:#475569; display:flex; align-items:center; gap:8px;">📉 全局生态演变趋势 <span style="font-size:12px; font-weight:normal; color:#94a3b8;">(期初鱼量)</span></h4>
+                        <h4 style="margin-top:0; color:#475569;">📉 全局生态演变趋势</h4>
                         <div class="chart-box"><canvas id="lineChart"></canvas></div>
                     </div>
                     
                     <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="margin:0; color:#475569;">📋 团队状态监控与管理</h4>
-                            <button onclick="downloadCSV()" style="background:var(--primary); color:white; font-size: 12px; padding: 8px 12px;">📥 导出数据CSV</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin:0; color:#475569;">📋 团队状态监控</h4>
+                            <button onclick="downloadCSV()" style="background:var(--primary); color:white; font-size: 12px; padding: 6px 12px;">📥 导出数据</button>
                         </div>
                         <div class="table-container">
                             <table class="admin-table" id="team-table">
-                                <thead>
-                                    <tr>
-                                        <th>公司名称</th>
-                                        <th>组员名单</th>
-                                        <th>累计收益 (吨)</th>
-                                        <th>本轮状态</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    </tbody>
+                                <thead><tr><th>公司名称</th><th>组员名单</th><th>累计收益</th><th>本轮状态</th></tr></thead>
+                                <tbody></tbody>
                             </table>
                         </div>
-                    </div>
-
-                    <div class="card" style="background:#fef2f2; border:2px solid #fca5a5;">
-                        <h4 style="margin-top:0; color:var(--danger); text-align:center;">⚠️ 风险控制操作区</h4>
-                        <button id="btn-process" onclick="processRound()" style="background:var(--danger); color:white; width:100%; font-size: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(220,38,38,0.4);">🚨 2. 结算本轮并开启繁衍</button>
-                        <p style="text-align:center; color:#94a3b8; font-size:12px; margin-bottom:0;">点击后将不可撤销，请确认所有小组已提交。</p>
                     </div>
                 </div>
 
                 <div class="right-panel">
+                    <div class="card" style="border-top: 4px solid var(--danger);">
+                        <button id="btn-process" onclick="processRound()" style="background:var(--danger); color:white; width:100%; font-size: 20px; padding: 18px; box-shadow: 0 4px 15px rgba(220,38,38,0.3);">🚨 结算本轮并繁衍</button>
+                        <p style="text-align:center; color:#94a3b8; font-size:12px; margin: 8px 0 0 0;">请在左侧确认所有企业均已提交后再点击</p>
+                    </div>
+
                     <div class="card" style="border-top: 4px solid var(--gold);">
-                        <h4 style="margin-top:0; color:var(--dark); text-align:center; font-weight:800;">🏆 全球渔业排行榜</h4>
+                        <h4 style="margin-top:0; text-align:center;">🏆 全球渔业排行榜</h4>
                         <div style="height:250px; position:relative;"><canvas id="barChart"></canvas></div>
                     </div>
                     <div class="card">
-                        <h4 style="margin-top:0; color:#475569; text-align:center;">🍕 上一轮捕捞占比</h4>
+                        <h4 style="margin-top:0; text-align:center;">🍕 上一轮捕捞占比</h4>
                         <div style="height:200px; position:relative;"><canvas id="pieChart"></canvas></div>
-                    </div>
-                    
-                    <div id="review-panel" class="card hidden">
-                        <h2 style="margin-top:0; color:var(--danger); display:flex; align-items:center; gap:10px;">🚨 鱼塘枯竭！文明崩塌</h2>
-                        <p style="font-size:14px; color:#64748b; margin-top:0; background:white; padding:10px; border-radius:6px;">生态链已彻底断裂，所有捕捞产品变质。<b>所有企业累计资产已被强制清零。</b></p>
-                        <h4 style="margin: 15px 0 10px; color: var(--dark);">🌟 领越领导力反思时刻：</h4>
-                        <div class="behavior-box" id="b1">1. 以身作则 (Model the Way)</div>
-                        <div class="behavior-box" id="b2">2. 共启愿景 (Inspire a Shared Vision)</div>
-                        <div class="behavior-box" id="b3">3. 挑战现状 (Challenge the Process)</div>
-                        <div class="behavior-box" id="b4">4. 使众人行 (Enable Others to Act)</div>
-                        <div class="behavior-box" id="b5">5. 激励人心 (Encourage the Heart)</div>
-                        <button onclick="revealBehaviors()" style="background:var(--gold); color:white; width:100%; margin-top:15px; font-size: 16px; padding: 12px;">👉 逐项揭晓复盘要点</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="collapse-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h1 style="font-size: 60px; margin: 0 0 10px;">🚨</h1>
+            <h2 style="color: var(--danger); margin-top: 0; font-size: 28px;">生态系统全面崩溃</h2>
+            <p style="color: #64748b; font-size: 16px; line-height: 1.5;">由于全盘极度贪婪的过度捕捞行为，总需求远超自然繁衍极限，鱼塘已彻底枯竭成为死海。</p>
+            <div style="background: #fef2f2; border: 1px dashed #fca5a5; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <b style="color: var(--danger); font-size: 18px;">所有企业累计资产已被强制清零！</b>
+            </div>
+            <button onclick="closeModal()" style="background: var(--dark); color: white; width: 100%; padding: 14px; font-size: 16px;">关闭警报 (进入复盘阶段)</button>
+        </div>
+    </div>
+
 <script>
-    // --- 数据库配置 ---
     const SB_URL = 'https://adjvfvfbjfrtenvbocfw.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkanZmdmZiamZydGVudmJvY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMzAzNjEsImV4cCI6MjA4MTcwNjM2MX0.Fzd2LU2ueKg0V47NSC9nQY_5hHaFY8SqJuV281iXKag';
     const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -232,7 +214,7 @@
     let myTeam = null, myRoomId = null, activeTeamsList = [];
     let lineChart, pieChart, barChart;
 
-    // --- 登录页入口切换 ---
+    // --- 登录/注销 ---
     function switchLoginRole(role) {
         document.getElementById('login-stu-area').classList.toggle('hidden', role !== 'student');
         document.getElementById('login-adm-area').classList.toggle('hidden', role !== 'admin');
@@ -243,28 +225,47 @@
     async function studentLogin() {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
-        if(!u || !p) return alert("请输入账号和授权码");
-        const { data, error } = await sb.from('fishpond_teams').select('*').eq('username', u).eq('password', p).single();
+        if(!u || !p) return alert("请输入账号和密码");
+        const { data } = await sb.from('fishpond_teams').select('*').eq('username', u).eq('password', p).single();
         if (data) { 
             myTeam = data; myRoomId = data.room_id; 
             await sb.from('fishpond_teams').update({ is_active: true }).eq('id', myTeam.id);
             initStudentUI(); 
-        } else { alert("验证失败：账号或授权码错误"); }
+        } else alert("账号或密码错误");
     }
 
     function adminLogin() {
         const room = document.getElementById('login-room').value;
         const pwd = document.getElementById('login-adm-pass').value;
-        if (pwd === room + "419") { myRoomId = room; initAdminUI(); } else { alert("验证失败：密码错误"); }
+        if (pwd === room + "419") { myRoomId = room; initAdminUI(); } else alert("密码错误");
+    }
+
+    async function logout() {
+        if(confirm("确定要退出系统吗？")) {
+            if(myTeam) await sb.from('fishpond_teams').update({ is_active: false }).eq('id', myTeam.id);
+            location.reload();
+        }
     }
 
     // --- 学生端逻辑 ---
-    function initStudentUI() {
-        document.getElementById('bg-anim').classList.add('hidden'); // 隐藏背景动画
+    async function initStudentUI() {
+        document.getElementById('bg-anim').classList.add('hidden');
         document.getElementById('screen-login').classList.add('hidden');
-        document.getElementById('nav-container').classList.remove('hidden');
         document.getElementById('screen-student').classList.remove('hidden');
+        
+        // 断点重连：拉取最新房间状态
+        const { data: room } = await sb.from('fishpond_rooms').select('*').eq('id', myRoomId).single();
+        if(room) {
+            document.getElementById('s-turn').innerText = room.turn;
+            if(room.is_collapsed) showCollapseWarning('student');
+        }
+
         renderStudentData(myTeam);
+        // 如果本轮已提交，锁定按钮
+        if (myTeam.last_catch !== null) {
+            document.getElementById('btn-submit').disabled = true;
+            document.getElementById('submit-msg').innerText = "✅ 决策已上传，等待结算";
+        }
         
         sb.channel('stu_room').on('postgres_changes', { event:'UPDATE', schema:'public', table:'fishpond_rooms', filter:`id=eq.${myRoomId}` }, payload => {
             const r = payload.new;
@@ -272,11 +273,8 @@
             document.getElementById('btn-submit').disabled = false;
             document.getElementById('submit-msg').innerText = "";
             document.getElementById('catch-input').value = "";
-            
-            const scoreBox = document.getElementById('s-score-container');
-            const bankruptMsg = document.getElementById('s-bankrupt-msg');
-            if (r.is_collapsed) { scoreBox.classList.add('bankrupt'); bankruptMsg.classList.remove('hidden'); } 
-            else { scoreBox.classList.remove('bankrupt'); bankruptMsg.classList.add('hidden'); }
+            if (r.is_collapsed) showCollapseWarning('student'); 
+            else { document.getElementById('s-score-container').classList.remove('bankrupt'); document.getElementById('s-bankrupt-msg').classList.add('hidden'); }
         }).subscribe();
 
         sb.channel('stu_team').on('postgres_changes', { event:'UPDATE', schema:'public', table:'fishpond_teams', filter:`id=eq.${myTeam.id}` }, payload => {
@@ -297,25 +295,23 @@
         if(val === "") return alert("内容不能为空");
         const updateData = {}; updateData[field] = val;
         await sb.from('fishpond_teams').update(updateData).eq('id', myTeam.id);
-        alert(field === 'name' ? "公司名称已更新！" : "组员名单已登记！");
+        alert("信息已保存！");
     }
 
     async function submitDecision() {
         const val = parseInt(document.getElementById('catch-input').value);
-        if (isNaN(val) || val < 0 || val > 100 || document.getElementById('catch-input').value === "") return alert("❌ 决策无效：请输入 0-100 之间的整数。");
-        
+        if (isNaN(val) || val < 0 || val > 100) return alert("❌ 请输入 0-100 之间的整数");
         await sb.from('fishpond_teams').update({ last_catch: val }).eq('id', myTeam.id);
         document.getElementById('btn-submit').disabled = true;
-        document.getElementById('submit-msg').innerText = "✅ 决策已锁定并加密上传";
+        document.getElementById('submit-msg').innerText = "✅ 决策已锁定";
     }
 
     // --- 教师端逻辑 ---
     async function initAdminUI() {
         document.getElementById('bg-anim').classList.add('hidden');
         document.getElementById('screen-login').classList.add('hidden');
-        document.getElementById('nav-container').classList.remove('hidden');
         document.getElementById('screen-admin').classList.remove('hidden');
-        document.getElementById('t-room-tag').innerText = "考场 " + myRoomId;
+        document.getElementById('t-room-tag').innerText = myRoomId;
         
         initCharts();
         await fetchAdminData();
@@ -325,11 +321,10 @@
     }
 
     function initCharts() {
-        const fontOpts = { size: 11, weight: 'bold' };
-        const commonOpts = { responsive: true, maintainAspectRatio: false };
-        lineChart = new Chart(document.getElementById('lineChart'), { type: 'line', data: { labels: [], datasets: [{ label: '期初鱼量', data: [], borderColor: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.1)', fill: true, tension: 0.3, pointRadius: 4 }] }, options: { ...commonOpts, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } } });
-        pieChart = new Chart(document.getElementById('pieChart'), { type: 'pie', data: { labels: [], datasets: [{ data: [], backgroundColor: ['#ef4444','#f97316','#f59e0b','#84cc16','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#d946ef'] }] }, options: { ...commonOpts, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } } });
-        barChart = new Chart(document.getElementById('barChart'), { type: 'bar', data: { labels: [], datasets: [{ label: '累计收益', data: [], backgroundColor: '#f59e0b', borderRadius: 4 }] }, options: { ...commonOpts, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false }, ticks: { font: fontOpts } } } } });
+        const fontOpts = { size: 11, weight: 'bold' }; const commonOpts = { responsive: true, maintainAspectRatio: false };
+        lineChart = new Chart(document.getElementById('lineChart'), { type: 'line', data: { labels: [], datasets: [{ label: '期初鱼量', data: [], borderColor: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.1)', fill: true, tension: 0.2, pointRadius: 5 }] }, options: { ...commonOpts, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+        pieChart = new Chart(document.getElementById('pieChart'), { type: 'pie', data: { labels: [], datasets: [{ data: [], backgroundColor: ['#ef4444','#f97316','#f59e0b','#84cc16','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#d946ef'] }] }, options: { ...commonOpts, plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } } } });
+        barChart = new Chart(document.getElementById('barChart'), { type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: '#f59e0b', borderRadius: 4 }] }, options: { ...commonOpts, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true }, y: { ticks: { font: fontOpts } } } } });
     }
 
     async function fetchAdminData() {
@@ -340,89 +335,76 @@
         activeTeamsList = teams;
         document.getElementById('t-active-teams').innerText = teams.length;
         document.getElementById('t-turn').innerText = room.turn;
-        document.getElementById('t-fish').innerText = room.turn === 1 && logs.length === 0 ? room.current_fish : (logs.length > 0 ? logs[logs.length-1].initial_fish : room.current_fish);
+        document.getElementById('t-fish').innerText = room.current_fish;
         document.getElementById('t-max').innerText = room.max_capacity;
         
         const submittedCount = teams.filter(t => t.last_catch !== null).length;
         document.getElementById('t-submitted').innerText = `${submittedCount} / ${teams.length}`;
 
-        // 更新图表
-        if (logs.length > 0) {
-            lineChart.data.labels = logs.map(l => "R" + l.turn);
-            lineChart.data.datasets[0].data = logs.map(l => l.initial_fish);
-            lineChart.update();
-        }
+        // 【更新折线图】：将历史记录和“当前轮的期初鱼量”拼合在一起
+        let labels = logs.map(l => "R" + l.turn);
+        let dataPoints = logs.map(l => l.initial_fish);
+        labels.push("R" + room.turn + " (本轮)");
+        dataPoints.push(room.current_fish);
+        lineChart.data.labels = labels; lineChart.data.datasets[0].data = dataPoints; lineChart.update();
+
+        // 柱状图
         let sortedTeams = [...teams].sort((a, b) => b.total_catch - a.total_catch);
-        barChart.data.labels = sortedTeams.map((t, i) => (i===0?"🥇 ":(i===1?"🥈 ":(i===2?"🥉 ":""))) + t.name.substring(0,8));
-        barChart.data.datasets[0].data = sortedTeams.map(t => t.total_catch);
-        barChart.update();
+        barChart.data.labels = sortedTeams.map((t, i) => (i===0?"🥇":(i===1?"🥈":(i===2?"🥉":""))) + t.name.substring(0,8));
+        barChart.data.datasets[0].data = sortedTeams.map(t => t.total_catch); barChart.update();
 
-        // 更新团队状态表格
-        const tableBody = document.querySelector('#team-table tbody');
-        tableBody.innerHTML = '';
-        teams.forEach(t => {
-            const statusHtml = t.last_catch !== null 
-                ? '<span class="status-badge status-ok">✅ 已提交</span>' 
-                : '<span class="status-badge status-pending">⏳ 等待中</span>';
-            const row = `<tr>
-                <td style="font-weight:bold;">${t.name}</td>
-                <td style="color:#64748b; font-size:12px;">${t.members || '-'}</td>
-                <td style="font-weight:bold; color:var(--primary);">${t.total_catch}</td>
-                <td>${statusHtml}</td>
-            </tr>`;
-            tableBody.innerHTML += row;
-        });
+        // 表格
+        document.querySelector('#team-table tbody').innerHTML = teams.map(t => `<tr>
+            <td style="font-weight:bold;">${t.name}</td><td style="color:#64748b; font-size:12px;">${t.members || '-'}</td>
+            <td style="font-weight:bold; color:var(--primary);">${t.total_catch}</td>
+            <td>${t.last_catch !== null ? '<span class="status-badge status-ok">✅ 已提交</span>' : '<span class="status-badge status-pending">⏳ 等待中</span>'}</td>
+        </tr>`).join('');
 
-        if (room.is_collapsed) document.getElementById('review-panel').classList.remove('hidden');
-    }
-
-    function downloadCSV() {
-        if (activeTeamsList.length === 0) return alert("暂无数据可导出");
-        let csvContent = "\uFEFF公司名称,组员名单,累计收益,当前状态\n"; 
-        activeTeamsList.forEach(t => {
-            const status = t.last_catch !== null ? "已提交" : "未提交";
-            const members = t.members ? `"${t.members}"` : "";
-            csvContent += `${t.name},${members},${t.total_catch},${status}\n`;
-        });
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `鱼塘公约_房间${myRoomId}_数据导出.csv`;
-        link.click();
+        if (room.is_collapsed && document.getElementById('collapse-modal').classList.contains('hidden')) {
+            showCollapseWarning('admin');
+        }
     }
 
     async function initGameSession() {
-        if (!confirm("⚠️ 高危操作警告：\n确定要初始化并开启新场次吗？\n\n1. 所有已连接企业的累计收益将被清零。\n2. 系统将基于当前连接数重置生态资源上限。")) return;
+        if (!confirm("⚠️ 确定要开启新场次吗？\n所有连接企业的累计收益将清零，生态资源将基于当前连接数重置！")) return;
         const { data: teams } = await sb.from('fishpond_teams').select('id').eq('room_id', myRoomId).eq('is_active', true);
         let N = teams.length;
-        if (N < 2) return alert("❌ 无法初始化：至少需要 2 个企业连接才能开启博弈。");
+        if (N < 2) return alert("❌ 无法初始化：至少需要 2 个活跃企业！");
         const { data: room } = await sb.from('fishpond_rooms').select('experiment_id').eq('id', myRoomId).single();
-        const nextExp = (room.experiment_id || 0) + 1;
-        await sb.from('fishpond_rooms').update({ experiment_id: nextExp, turn: 1, current_fish: N * 300, max_capacity: N * 400, is_collapsed: false }).eq('id', myRoomId);
+        
+        // 重置环境
+        await sb.from('fishpond_rooms').update({ experiment_id: (room.experiment_id || 0) + 1, turn: 1, current_fish: N * 300, max_capacity: N * 400, is_collapsed: false }).eq('id', myRoomId);
         await sb.from('fishpond_teams').update({ total_catch: 0, last_catch: null }).eq('room_id', myRoomId);
-        lineChart.data.labels = []; lineChart.data.datasets[0].data = []; lineChart.update();
+        
         pieChart.data.labels = []; pieChart.data.datasets[0].data = []; pieChart.update();
-        document.getElementById('review-panel').classList.add('hidden');
-        alert(`✅ 新场次已开启！\n识别到 ${N} 家企业，生态上限已设定为 ${N * 400} 吨。`);
+        alert(`✅ 新场次已开启！生态上限已设定为 ${N * 400} 吨。`);
     }
 
     async function processRound() {
-        if(activeTeamsList.length === 0) return alert("没有活跃企业，无法结算。");
-        const btn = document.getElementById('btn-process');
-        btn.innerText = "⏳ 正在进行生态演算..."; btn.disabled = true;
+        if(activeTeamsList.length === 0) return alert("没有活跃企业。");
+        const submittedCount = activeTeamsList.filter(t => t.last_catch !== null).length;
+        
+        // 防提前判决误操作拦截
+        if (submittedCount < activeTeamsList.length) {
+            if(!confirm(`⚠️ 警告：还有 ${activeTeamsList.length - submittedCount} 家企业未提交！\n强制结算会把未提交企业的捕捞量记为 0，确定继续吗？`)) return;
+        }
+
+        const btn = document.getElementById('btn-process'); btn.disabled = true;
         try {
             const { data: teams } = await sb.from('fishpond_teams').select('*').eq('room_id', myRoomId).eq('is_active', true);
             const { data: room } = await sb.from('fishpond_rooms').select('*').eq('id', myRoomId).single();
-            if (room.is_collapsed) return alert("鱼塘已枯竭，请勿重复结算。");
+            if (room.is_collapsed) return alert("已枯竭。");
 
-            let totalCatch = 0, pieLabels = [], pieValues = [];
+            let totalCatch = 0, pieLabels = [], pieValues = [], detailsObj = {};
             for (let t of teams) {
-                let val = t.last_catch || 0; totalCatch += val; 
-                pieLabels.push(t.name); pieValues.push(val);
+                let val = t.last_catch || 0; 
+                totalCatch += val; pieLabels.push(t.name); pieValues.push(val); detailsObj[t.name] = val;
                 await sb.from('fishpond_teams').update({ total_catch: t.total_catch + val, last_catch: null }).eq('id', t.id);
             }
             pieChart.data.labels = pieLabels; pieChart.data.datasets[0].data = pieValues; pieChart.update();
-            await sb.from('fishpond_logs').insert({ room_id: myRoomId, exp_id: room.experiment_id, turn: room.turn, initial_fish: room.current_fish, total_catch_all: totalCatch });
+            
+            // 写入日志（包含明细）
+            await sb.from('fishpond_logs').insert({ room_id: myRoomId, exp_id: room.experiment_id, turn: room.turn, initial_fish: room.current_fish, total_catch_all: totalCatch, details: detailsObj });
 
             if (totalCatch >= room.current_fish) {
                 await sb.from('fishpond_rooms').update({ turn: room.turn + 1, current_fish: 0, is_collapsed: true }).eq('id', myRoomId);
@@ -431,14 +413,37 @@
                 let nextFish = Math.min(room.max_capacity, Math.round((room.current_fish - totalCatch) * 1.2));
                 await sb.from('fishpond_rooms').update({ turn: room.turn + 1, current_fish: nextFish }).eq('id', myRoomId);
             }
-        } catch(e) { console.error(e); alert("结算出错，请检查网络"); }
-        finally { btn.innerHTML = "🚨 2. 结算本轮并开启繁衍"; btn.disabled = false; }
+        } catch(e) { console.error(e); }
+        finally { btn.disabled = false; }
     }
 
-    function revealBehaviors() {
-        ['b1','b2','b3','b4','b5'].forEach((id, i) => setTimeout(() => document.getElementById(id).classList.add('show'), i * 800));
+    // --- 通用弹窗与导出 ---
+    function showCollapseWarning(role) {
+        if (role === 'admin') document.getElementById('collapse-modal').classList.remove('hidden');
+        if (role === 'student') {
+            document.getElementById('s-score-container').classList.add('bankrupt');
+            document.getElementById('s-bankrupt-msg').classList.remove('hidden');
+        }
     }
-    function logout() { location.reload(); }
+    function closeModal() { document.getElementById('collapse-modal').classList.add('hidden'); }
+
+    async function downloadCSV() {
+        if (!confirm("即将导出本房间【所有场次的历史完整数据】，包含每组每轮的具体决策数字，是否继续？")) return;
+        const { data: logs } = await sb.from('fishpond_logs').select('*').eq('room_id', myRoomId).order('exp_id').order('turn');
+        const { data: teams } = await sb.from('fishpond_teams').select('*').eq('room_id', myRoomId);
+
+        let csv = "\uFEFF【第一部分：全局场次与生态演变记录】\n实验场次,轮数,本轮期初鱼量,全班总捕捞量,结算时间,各组具体决策详情\n";
+        logs.forEach(l => {
+            let detailStr = l.details ? Object.entries(l.details).map(([k,v]) => `${k}:${v}吨`).join(" | ") : "无明细";
+            csv += `${l.exp_id},${l.turn},${l.initial_fish},${l.total_catch_all},${new Date(l.created_at).toLocaleString()},"${detailStr}"\n`;
+        });
+        csv += "\n\n【第二部分：企业注册名册】\n系统账号,公司名称,组员名单,历史最高累计收益\n";
+        teams.forEach(t => { csv += `${t.username},${t.name},"${t.members || ''}",${t.total_catch}\n`; });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+        link.download = `鱼塘公约_房间${myRoomId}_完整数据报表.csv`; link.click();
+    }
 </script>
 </body>
 </html>
